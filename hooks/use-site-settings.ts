@@ -16,6 +16,11 @@ interface SiteSettings {
   instagram_url: string
   meta_title: string
   meta_description: string
+  // Splash screen
+  splash_enabled: string
+  splash_effect: string
+  splash_tagline: string
+  splash_bg_style: string
   [key: string]: string | null
 }
 
@@ -34,18 +39,47 @@ const DEFAULT: SiteSettings = {
   instagram_url: '',
   meta_title: 'DT Shop',
   meta_description: 'Mua sắm trực tuyến giá tốt',
+  // Splash defaults
+  splash_enabled: '1',
+  splash_effect: 'particles',
+  splash_tagline: 'Mua sắm trực tuyến dễ dàng',
+  splash_bg_style: 'gradient',
+}
+
+// ── Singleton: chỉ fetch 1 lần, chia sẻ giữa tất cả component ────────────────
+let _settings: SiteSettings = DEFAULT
+let _loading = true
+let _fetched = false
+const _listeners = new Set<() => void>()
+
+function notify() { _listeners.forEach(fn => fn()) }
+
+function fetchSettingsOnce() {
+  if (_fetched) return
+  _fetched = true
+  apiClient.get('/api/settings/flat')
+    .then(({ data }) => {
+      _settings = { ...DEFAULT, ...data.data }
+    })
+    .catch(() => { _fetched = false }) // retry on error
+    .finally(() => {
+      _loading = false
+      notify()
+    })
 }
 
 export function useSiteSettings() {
-  const [settings, setSettings] = useState<SiteSettings>(DEFAULT)
-  const [loading, setLoading] = useState(true)
+  const [, forceUpdate] = useState(0)
 
   useEffect(() => {
-    apiClient.get('/api/settings/flat')
-      .then(({ data }) => setSettings({ ...DEFAULT, ...data.data }))
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    const update = () => forceUpdate(n => n + 1)
+    _listeners.add(update)
+    return () => { _listeners.delete(update) }
   }, [])
 
-  return { settings, loading }
+  useEffect(() => {
+    fetchSettingsOnce()
+  }, [])
+
+  return { settings: _settings, loading: _loading }
 }

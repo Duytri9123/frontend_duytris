@@ -60,3 +60,41 @@ export const api = {
 }
 
 export default api
+
+
+// Support Ticket API functions
+export const supportTicketApi = {
+  createTicket: async (data: {
+    title: string
+    description: string
+    category: 'complaint' | 'support' | 'report' | 'feedback'
+    priority: 'low' | 'medium' | 'high' | 'urgent'
+    attachment_url?: string
+  }) => api.post('/support-tickets', data),
+
+  getTickets: async (params?: {
+    category?: string
+    status?: string
+    priority?: string
+    search?: string
+    per_page?: number
+    page?: number
+  }) => api.get('/support-tickets', params),
+
+  getTicketDetail: async (ticketId: number) =>
+    api.get(`/support-tickets/${ticketId}`),
+
+  updateTicketStatus: async (ticketId: number, status: string) =>
+    api.put(`/support-tickets/${ticketId}`, { status }),
+
+  deleteTicket: async (ticketId: number) =>
+    api.delete(`/support-tickets/${ticketId}`),
+
+  addReply: async (ticketId: number, data: {
+    message: string
+    attachment_url?: string
+  }) => api.post(`/support-tickets/${ticketId}/replies`, data),
+
+  deleteReply: async (ticketId: number, replyId: number) =>
+    api.delete(`/support-tickets/${ticketId}/replies/${replyId}`),
+}

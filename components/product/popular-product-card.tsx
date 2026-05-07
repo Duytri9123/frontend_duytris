@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useState } from 'react'
-import { ShoppingCart, Star, Check } from 'lucide-react'
+import { ShoppingCart, Star, Eye, Check } from 'lucide-react'
 import type { Product } from '@/types'
 import { useCartStore } from '@/stores/cart-store'
 
@@ -15,12 +15,13 @@ export function resolveImageUrl(url: string | undefined): string | undefined {
   return `${API_URL}/${storagePath}`
 }
 
-interface ProductCardProps {
+interface PopularProductCardProps {
   product: Product
+  viewCount?: number
   priority?: boolean
 }
 
-export function ProductCard({ product, priority = false }: ProductCardProps) {
+export function PopularProductCard({ product, viewCount, priority = false }: PopularProductCardProps) {
   const defaultVariant = product.variants.find((v) => v.is_default) ?? product.variants[0]
   const price = defaultVariant?.selling_price
   const originalPrice = defaultVariant?.original_price
@@ -65,7 +66,15 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           </div>
         )}
 
-        {/* Discount badge */}
+        {/* View count badge — top left */}
+        {viewCount != null && viewCount > 0 && (
+          <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 backdrop-blur-sm">
+            <Eye size={11} className="text-white" />
+            <span className="text-[10px] font-semibold text-white">{viewCount}</span>
+          </div>
+        )}
+
+        {/* Discount badge — top right */}
         {discountPct > 0 && (
           <span className="absolute right-2 top-2 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
             -{discountPct}%
